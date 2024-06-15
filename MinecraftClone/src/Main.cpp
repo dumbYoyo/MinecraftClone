@@ -3,6 +3,57 @@
 #include "Core/Shader.h"
 #include "Core/Renderer.h"
 
+void GenerateChunk(Renderer& renderer, unsigned int mesh, float x, float y, float z)
+{
+	renderer.CreateMesh(mesh, "res/tex.png");
+	renderer.GetMesh(mesh).Position = glm::vec3(x, y, z);
+
+	std::vector<glm::vec3> positions;
+
+	int CHUNK_SIZE = 8;
+	for (int i = 0; i < CHUNK_SIZE; i++)
+	{
+		for (int j = 0; j < CHUNK_SIZE; j++)
+		{
+			for (int k = 0; k < CHUNK_SIZE; k++)
+			{
+				positions.push_back(glm::vec3(i, j, k));
+			}
+		}
+	}
+
+	std::vector<glm::mat4> models;
+
+	for (int i = 0; i < CHUNK_SIZE; i++)
+	{
+		for (int j = 0; j < CHUNK_SIZE; j++)
+		{
+			for (int k = 0; k < CHUNK_SIZE; k++)
+			{
+				bool right = (std::find(positions.begin(), positions.end(), glm::vec3(i + 1, j, k)) != positions.end()) ? false : true;
+				bool left = (std::find(positions.begin(), positions.end(), glm::vec3(i - 1, j, k)) != positions.end()) ? false : true;
+				bool top = (std::find(positions.begin(), positions.end(), glm::vec3(i, j + 1, k)) != positions.end()) ? false : true;
+				bool bottom = (std::find(positions.begin(), positions.end(), glm::vec3(i, j - 1, k)) != positions.end()) ? false : true;
+				bool back = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k - 1)) != positions.end()) ? false : true;
+				bool front = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k + 1)) != positions.end()) ? false : true;
+
+				Cube cube(front, back, top, bottom, left, right);
+				cube.Position = glm::vec3(i, j, k);
+				renderer.GetMesh(mesh).AddCube(cube);
+				glm::mat4 perObjectModel = glm::mat4(1.0f);
+				perObjectModel = glm::translate(perObjectModel, cube.Position);
+				models.push_back(perObjectModel);
+			}
+		}
+	}
+
+	Mesh& chunk = renderer.GetMesh(mesh);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunk.Ssbo_Models);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, models.size() * sizeof(glm::mat4), models.data(), GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, chunk.Ssbo_Models);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
 int main()
 {
 	glfwInit();
@@ -21,42 +72,8 @@ int main()
 
 	Camera camera;
 
-	unsigned int mesh = 1;
-	renderer.CreateMesh(mesh, "res/tex.png");
-
-	std::vector<glm::vec3> positions;
-
-	int CHUNK_SIZE = 5;
-	for (int i = 0; i < CHUNK_SIZE; i++)
-	{
-		for (int j = 0; j < CHUNK_SIZE; j++)
-		{
-			for (int k = 0; k < CHUNK_SIZE; k++)
-			{
-				positions.push_back(glm::vec3(i, j, k));
-			}
-		}
-	}
-
-	for (int i = 0; i < CHUNK_SIZE; i++)
-	{
-		for (int j = 0; j < CHUNK_SIZE; j++)
-		{
-			for (int k = 0; k < CHUNK_SIZE; k++)
-			{
-				bool right = (std::find(positions.begin(), positions.end(), glm::vec3(i + 1, j, k)) != positions.end()) ? false : true;
-				bool left = (std::find(positions.begin(), positions.end(), glm::vec3(i - 1, j, k)) != positions.end()) ? false : true;
-				bool top = (std::find(positions.begin(), positions.end(), glm::vec3(i, j + 1, k)) != positions.end()) ? false : true;
-				bool bottom = (std::find(positions.begin(), positions.end(), glm::vec3(i, j - 1, k)) != positions.end()) ? false : true;
-				bool back = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k - 1)) != positions.end()) ? false : true;
-				bool front = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k + 1)) != positions.end()) ? false : true;
-				
-				Cube cube(front, back, top, bottom, left, right);
-				cube.Position = glm::vec3(i, j, k);
-				renderer.GetMesh(mesh).AddCube(cube);
-			}
-		}
-	}
+	for (int i = 0; i < 10; i++)
+		GenerateChunk(renderer, i, i*9, 0, 0);
 
 	float previous = (float)glfwGetTime();
 

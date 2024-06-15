@@ -48,7 +48,7 @@ void Renderer::Render(Camera& camera)
 
 		for (int i = 0; i < mesh.Indices.size(); i++)
 		{
-			m_shader.LoadInt(("indices[" + std::to_string(i) + "]").c_str(), mesh.Indices[i]);
+			//m_shader.LoadInt(("indices[" + std::to_string(i) + "]").c_str(), mesh.Indices[i]);
 		}
 
 		glBindVertexArray(mesh.Vao);

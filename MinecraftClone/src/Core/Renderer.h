@@ -151,6 +151,8 @@ public:
 	unsigned int Vao{ 0 };
 	unsigned int Vbo{ 0 };
 	unsigned int Tbo{ 0 };
+	unsigned int Ssbo_Indices{ 0 };
+	unsigned int Ssbo_Models{ 0 };
 	int VertexCount{ 0 };
 	int InstanceCount{ 0 };
 	glm::vec3 Position{ 0, 0, 0 };
@@ -175,6 +177,9 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, 2 * (initialVertexArraySize / 3) * sizeof(float), m_texCoords.data(), GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glGenBuffers(1, &Ssbo_Indices);
+		glGenBuffers(1, &Ssbo_Models);
 	}
 
 	
@@ -187,8 +192,14 @@ public:
 		for (int i = 0; i < cube.VertexCount; i++)
 			Indices.push_back(InstanceCount);
 		VertexCount += cube.VertexCount;
+		UpdateSsbo_Indices();
 
 		InstanceCount++;
+	}
+
+	void UpdateSsbo_Models()
+	{
+		
 	}
 
 	void AppendVertices(const std::vector<float>& verticesToAppend)
@@ -216,6 +227,14 @@ public:
 		m_texCoords.push_back(x);
 		m_texCoords.push_back(y);
 		UpdateTbo();
+	}
+
+	void UpdateSsbo_Indices()
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, Ssbo_Indices);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, Indices.size() * sizeof(int), Indices.data(), GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, Ssbo_Indices);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
 	void UpdateVbo()
