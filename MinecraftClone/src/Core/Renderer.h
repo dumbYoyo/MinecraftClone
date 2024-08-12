@@ -197,11 +197,6 @@ public:
 		InstanceCount++;
 	}
 
-	void UpdateSsbo_Models()
-	{
-		
-	}
-
 	void AppendVertices(const std::vector<float>& verticesToAppend)
 	{
 		m_vertices.insert(m_vertices.end(), verticesToAppend.begin(), verticesToAppend.end());

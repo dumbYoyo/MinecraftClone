@@ -7,7 +7,7 @@ workspace "MinecraftClone"
         "Release"
     }
 
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}}"
+outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 project "MinecraftClone"
     location "MinecraftClone"
@@ -34,6 +34,7 @@ project "MinecraftClone"
         "%{prj.name}/libraries/glm",
         "%{prj.name}/libraries/stb",
         "%{prj.name}/libraries/entt",
+        "%{prj.name}/libraries/fastNoiseLite/include"
     }
 
     libdirs
@@ -52,5 +53,5 @@ project "MinecraftClone"
         symbols "On"
 
     filter "configurations:Release"
-    defines "CP_RELEASE"
-    optimize "On"
+        defines "CP_RELEASE"
+        optimize "On"

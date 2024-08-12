@@ -9,9 +9,6 @@ uniform mat4 model;
 uniform mat4 proj;
 uniform mat4 view;
 
-//uniform mat4 modelMatrices[512];
-//uniform int indices[1000];
-
 layout(std430, binding = 3) buffer dataIndices
 {
 	int Indices[10000];

@@ -2,8 +2,9 @@
 #include <GLFW/glfw3.h>
 #include "Core/Shader.h"
 #include "Core/Renderer.h"
+#include <FastNoise/FastNoiseLite.h>
 
-void GenerateChunk(Renderer& renderer, unsigned int mesh, float x, float y, float z)
+void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int mesh, float x, float y, float z)
 {
 	renderer.CreateMesh(mesh, "res/tex.png");
 	renderer.GetMesh(mesh).Position = glm::vec3(x, y, z);
@@ -17,7 +18,7 @@ void GenerateChunk(Renderer& renderer, unsigned int mesh, float x, float y, floa
 		{
 			for (int k = 0; k < CHUNK_SIZE; k++)
 			{
-				positions.push_back(glm::vec3(i, j, k));
+				positions.push_back(glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k));
 			}
 		}
 	}
@@ -38,7 +39,7 @@ void GenerateChunk(Renderer& renderer, unsigned int mesh, float x, float y, floa
 				bool front = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k + 1)) != positions.end()) ? false : true;
 
 				Cube cube(front, back, top, bottom, left, right);
-				cube.Position = glm::vec3(i, j, k);
+				cube.Position = glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k);
 				renderer.GetMesh(mesh).AddCube(cube);
 				glm::mat4 perObjectModel = glm::mat4(1.0f);
 				perObjectModel = glm::translate(perObjectModel, cube.Position);
@@ -72,8 +73,14 @@ int main()
 
 	Camera camera;
 
-	for (int i = 0; i < 10; i++)
-		GenerateChunk(renderer, i, i*9, 0, 0);
+	FastNoiseLite noise;
+	noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+
+
+	for (int i = 0; i < 1; i++)
+	{
+		GenerateChunk(noise, renderer, i, i*9, 0, 0);
+	}
 
 	float previous = (float)glfwGetTime();
 

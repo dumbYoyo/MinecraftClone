@@ -39,26 +39,25 @@ void Renderer::Render(Camera& camera)
 		model = glm::translate(model, mesh.Position);
 		m_shader.LoadMat4f("model", model);
 
+		/*
 		for (int i = 0; i < mesh.Translations.size(); i++)
 		{
 			glm::mat4 perObjectModel = glm::mat4(1.0f);
 			perObjectModel = glm::translate(perObjectModel, mesh.Translations[i]);
 			m_shader.LoadMat4f(("modelMatrices[" + std::to_string(i) + "]").c_str(), perObjectModel);
 		}
-
-		for (int i = 0; i < mesh.Indices.size(); i++)
-		{
-			//m_shader.LoadInt(("indices[" + std::to_string(i) + "]").c_str(), mesh.Indices[i]);
-		}
+		*/
 
 		glBindVertexArray(mesh.Vao);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
 
 		glDrawArrays(GL_TRIANGLES, 0, mesh.VertexCount);
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
 		glBindVertexArray(0);
 	}
 	m_shader.Unbind();
