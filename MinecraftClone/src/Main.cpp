@@ -11,13 +11,14 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 
 	std::vector<glm::vec3> positions;
 
-	int CHUNK_SIZE = 8;
+	int CHUNK_SIZE = 4;
 	for (int i = 0; i < CHUNK_SIZE; i++)
 	{
 		for (int j = 0; j < CHUNK_SIZE; j++)
 		{
 			for (int k = 0; k < CHUNK_SIZE; k++)
 			{
+				// problem : some coordinates repeat, and that causes culling issues
 				positions.push_back(glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k));
 			}
 		}
@@ -25,6 +26,7 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 
 	std::vector<glm::mat4> models;
 
+	std::vector<glm::vec3> oldPositions;
 	for (int i = 0; i < CHUNK_SIZE; i++)
 	{
 		for (int j = 0; j < CHUNK_SIZE; j++)
@@ -38,15 +40,35 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 				bool back = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k - 1)) != positions.end()) ? false : true;
 				bool front = (std::find(positions.begin(), positions.end(), glm::vec3(i, j, k + 1)) != positions.end()) ? false : true;
 
-				Cube cube(front, back, top, bottom, left, right);
-				cube.Position = glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k);
-				renderer.GetMesh(mesh).AddCube(cube);
-				glm::mat4 perObjectModel = glm::mat4(1.0f);
-				perObjectModel = glm::translate(perObjectModel, cube.Position);
-				models.push_back(perObjectModel);
+				if (std::find(oldPositions.begin(), oldPositions.end(), glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k)) == oldPositions.end())
+				{
+					Cube cube(front, back, top, bottom, left, right);
+					cube.Position = glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k);
+					oldPositions.push_back(cube.Position);
+					renderer.GetMesh(mesh).AddCube(cube);
+					glm::mat4 perObjectModel = glm::mat4(1.0f);
+					perObjectModel = glm::translate(perObjectModel, cube.Position);
+					models.push_back(perObjectModel);
+				}
+				//cube.Position = glm::vec3(positions[i], positions[j], positions[k]);
 			}
 		}
 	}
+
+	//Cube cube(true, true, true, true, true, false);
+	//cube.Position = glm::vec3(0, 0, 0);
+	//glm::mat4 perObjectModel = glm::mat4(1.0f);
+	//perObjectModel = glm::translate(perObjectModel, cube.Position);
+	//models.push_back(perObjectModel);
+	//Cube cube1(true, true, true, true, false, true);
+	//glm::mat4 perObjectModel1 = glm::mat4(1.0f);
+	//cube1.Position = glm::vec3(1, 0, 0);
+	//perObjectModel1 = glm::translate(perObjectModel1, cube1.Position);
+	//models.push_back(perObjectModel1);
+	//renderer.GetMesh(mesh).AddCube(cube);
+	//renderer.GetMesh(mesh).AddCube(cube1);
+	
+	
 
 	Mesh& chunk = renderer.GetMesh(mesh);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunk.Ssbo_Models);
