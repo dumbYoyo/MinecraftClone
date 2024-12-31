@@ -4,21 +4,21 @@
 #include "Core/Renderer.h"
 #include <FastNoise/FastNoiseLite.h>
 
-void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int mesh, float x, float y, float z)
+void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, float x, float y, float z)
 {
-	renderer.CreateMesh(mesh, "res/tex.png");
-	renderer.GetMesh(mesh).Position = glm::vec3(x, y, z);
+	Chunk chunk(120);
+	chunk.Position = glm::vec3(x, y, z);
 
 	std::vector<glm::vec3> positions;
 
-	int CHUNK_SIZE = 9;
+	int CHUNK_SIZE = 9*5;
 	for (int i = 0; i < CHUNK_SIZE; i++)
 	{
-		for (int j = 0; j < CHUNK_SIZE; j++)
+		for (int j = 0; j < 16; j++)
 		{
 			for (int k = 0; k < CHUNK_SIZE; k++)
 			{
-				positions.push_back(glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k));
+				positions.push_back(glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k)) * 20), k));
 			}
 		}
 	}
@@ -28,11 +28,11 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 	std::vector<glm::vec3> oldPositions;
 	for (int i = 0; i < CHUNK_SIZE; i++)
 	{
-		for (int j = 0; j < CHUNK_SIZE; j++)
+		for (int j = 0; j < 16; j++)
 		{
 			for (int k = 0; k < CHUNK_SIZE; k++)
 			{
-				glm::vec3 position = glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k) * 2) * j), k);
+				glm::vec3 position = glm::vec3(i, (int)((noise.GetNoise((float)i, (float)k)) * 20), k);
 
 				bool right = (std::find(positions.begin(), positions.end(), glm::vec3(position.x + 1, position.y, position.z)) != positions.end()) ? false : true;
 				bool left = (std::find(positions.begin(), positions.end(), glm::vec3(position.x - 1, position.y, position.z)) != positions.end()) ? false : true;
@@ -46,7 +46,7 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 					Cube cube(front, back, top, bottom, left, right);
 					cube.Position = position;
 					oldPositions.push_back(position);
-					renderer.GetMesh(mesh).AddCube(cube);
+					chunk.AddCube(cube);
 					glm::mat4 perObjectModel = glm::mat4(1.0f);
 					perObjectModel = glm::translate(perObjectModel, cube.Position);
 					models.push_back(perObjectModel);
@@ -54,8 +54,9 @@ void GenerateChunk(const FastNoiseLite& noise, Renderer& renderer, unsigned int 
 			}
 		}
 	}
+
+	renderer.AddChunk(chunk);
 	
-	Mesh& chunk = renderer.GetMesh(mesh);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunk.Ssbo_Models);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, models.size() * sizeof(glm::mat4), models.data(), GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, chunk.Ssbo_Models);
@@ -81,13 +82,9 @@ int main()
 	Camera camera;
 
 	FastNoiseLite noise;
-	noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+	noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 
-
-	for (int i = 0; i < 1; i++)
-	{
-		GenerateChunk(noise, renderer, i, i*9, 0, 0);
-	}
+	GenerateChunk(noise, renderer, i*9, 0, 0);
 
 	float previous = (float)glfwGetTime();
 

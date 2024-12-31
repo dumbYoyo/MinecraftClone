@@ -8,16 +8,13 @@ void Renderer::Init()
 	m_shader.Bind();
 	m_shader.LoadMat4f("proj", proj);
 	m_shader.Unbind();
+
+	CreateTexture(m_texId, "res/tex.png");
 }
 
-/// <summary>
-/// Meshes with same Id are not allowed
-/// </summary>
-void Renderer::CreateMesh(unsigned int& meshId, std::string commonTexture)
+void Renderer::AddChunk(const Chunk& chunk)
 {
-	Mesh mesh(120);
-	m_meshes[meshId] = mesh;
-	CreateTexture(m_texId, commonTexture);
+	m_chunks.push_back(chunk);
 }
 
 void Renderer::Render(Camera& camera)
@@ -31,12 +28,10 @@ void Renderer::Render(Camera& camera)
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 	m_shader.LoadInt("texSampler", 0);
 
-	for (auto it = m_meshes.begin(); it != m_meshes.end(); it++)
+	for (Chunk& chunk : m_chunks)
 	{
-		Mesh& mesh = it->second;
-		
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, mesh.Position);
+		model = glm::translate(model, chunk.Position);
 		m_shader.LoadMat4f("model", model);
 
 		/*
@@ -48,12 +43,12 @@ void Renderer::Render(Camera& camera)
 		}
 		*/
 
-		glBindVertexArray(mesh.Vao);
+		glBindVertexArray(chunk.Vao);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 
-		glDrawArrays(GL_TRIANGLES, 0, mesh.VertexCount);
+		glDrawArrays(GL_TRIANGLES, 0, chunk.VertexCount);
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -61,11 +56,6 @@ void Renderer::Render(Camera& camera)
 		glBindVertexArray(0);
 	}
 	m_shader.Unbind();
-}
-
-Mesh& Renderer::GetMesh(unsigned int& meshId)
-{
-	return m_meshes[meshId];
 }
 
 void Renderer::CreateTexture(unsigned int& texId, std::string texPath)
