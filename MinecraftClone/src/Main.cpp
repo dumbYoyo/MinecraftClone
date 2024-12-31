@@ -84,7 +84,7 @@ int main()
 	FastNoiseLite noise;
 	noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 
-	GenerateChunk(noise, renderer, i*9, 0, 0);
+	GenerateChunk(noise, renderer, 9, 0, 0);
 
 	float previous = (float)glfwGetTime();
 
